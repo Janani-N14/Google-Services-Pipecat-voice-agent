@@ -1,0 +1,8 @@
+pipecat-ai[local-smart-turn-v3]
+fastapi
+uvicorn[standard]
+aiohttp
+python-dotenv
+torch
+torchaudio
+transformers
