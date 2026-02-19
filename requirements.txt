@@ -1,8 +1,26 @@
-pipecat-ai[local-smart-turn-v3]
-fastapi
-uvicorn[standard]
+# Core dependencies
+pipecat-ai
 aiohttp
 python-dotenv
+loguru
+
+# Web server for Piper TTS
+fastapi
+uvicorn
+pydantic
+
+# TTS (Text-to-Speech)
+piper-tts
+
+# Google API dependencies for Gmail and Calendar
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+
+# Audio processing (included with pipecat but may need explicit install)
 torch
 torchaudio
-transformers
+
+# Optional: For better performance
+numpy

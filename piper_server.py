@@ -1,8 +1,5 @@
-import io
-import wave
-import numpy as np
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response
 from pydantic import BaseModel
 from piper import PiperVoice
 import uvicorn
@@ -14,30 +11,20 @@ VOICE = PiperVoice.load(
 )
 
 SAMPLE_RATE = VOICE.config.sample_rate
+print(f"Piper sample rate: {SAMPLE_RATE}")  # Check this value!
 
 class TTSRequest(BaseModel):
     text: str
 
+@app.post("/")
 @app.post("/api/tts")
 def tts(req: TTSRequest):
-    buffer = io.BytesIO()
-
-    with wave.open(buffer, "wb") as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)      # int16
-        wf.setframerate(SAMPLE_RATE)
-
-        for chunk in VOICE.synthesize(req.text):
-            # AudioChunk has audio_int16_bytes attribute with the audio data already in int16 format
-            wf.writeframes(chunk.audio_int16_bytes)
-
-    buffer.seek(0)
-    return StreamingResponse(buffer, media_type="audio/wav")
+    audio_bytes = b""
+    for chunk in VOICE.synthesize(req.text):
+        audio_bytes += chunk.audio_int16_bytes
+    
+    # Return raw PCM, not WAV
+    return Response(content=audio_bytes, media_type="audio/raw")
 
 if __name__ == "__main__":
-    uvicorn.run(
-        "piper_server:app",
-        host="0.0.0.0",
-        port=5002,
-        log_level="info",
-    )
+    uvicorn.run("piper_server:app", host="127.0.0.1", port=5002, log_level="info")
