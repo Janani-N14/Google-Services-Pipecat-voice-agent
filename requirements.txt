@@ -24,3 +24,4 @@ torchaudio
 
 # Optional: For better performance
 numpy
+sarvamai
