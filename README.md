@@ -226,28 +226,3 @@ Total Tokens: 213
 TTS Characters: 1430
 ```
 ---
-
-# Pipeline Order (Important)
-
-```python
-[
-    transport.input(),
-    rtvi,
-    stt,
-    context_aggregator.user(),
-    llm,
-    tts,
-    metrics_logger,
-    transport.output(),
-    context_aggregator.assistant(),
-]
-```
-
-Correct ordering prevents:
-
-* Broken tool calls
-* Audio deadlocks
-* Context corruption
-
----
-
