@@ -23,7 +23,5 @@ google-auth-oauthlib>=1.2.0
 google-auth-httplib2>=0.2.0
 google-api-python-client>=2.118.0
 
-# Audio Processing & VAD
-torch>=2.2.0
-torchaudio>=2.2.0
+# Numerical arrays
 numpy>=1.26.0

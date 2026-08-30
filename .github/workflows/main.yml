@@ -68,6 +68,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Free Disk Space on EC2 Runner
+        run: |
+          docker system prune -af --volumes || true
+          sudo apt-get clean || true
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -79,13 +84,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Pull latest images
+      - name: Stop and remove existing container if running
+        run: |
+          docker ps -q --filter "name=voice-agent" | grep -q . && docker stop voice-agent && docker rm -fv voice-agent || true
+
+      - name: Pull latest image
         run: |
           docker pull ${{ secrets.AWS_ECR_LOGIN_URI }}/${{ secrets.ECR_REPOSITORY_NAME }}:latest
-
-      # - name: Stop and remove container if running
-      #   run: |
-      #     docker ps -q --filter "name=voice-agent" | grep -q . && docker stop voice-agent && docker rm -fv voice-agent || true
 
       - name: Run Docker Image to serve users
         run: |
