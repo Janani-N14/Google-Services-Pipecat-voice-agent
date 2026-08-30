@@ -1,26 +1,29 @@
-# Core dependencies
-pipecat-ai
-aiohttp
-python-dotenv
-loguru
+# ==============================================================================
+# Pipecat Voice Agent Dependencies
+# ==============================================================================
 
-# Web server for Piper TTS
-fastapi
-uvicorn
-pydantic
+# Core Pipecat Framework
+pipecat-ai>=0.0.97
 
-# TTS (Text-to-Speech)
-piper-tts
+# Asynchronous HTTP & Networking
+aiohttp>=3.9.0
+requests>=2.31.0
+websockets>=12.0
+fastapi>=0.110.0
+uvicorn>=0.28.0
 
-# Google API dependencies for Gmail and Calendar
-google-auth
-google-auth-oauthlib
-google-auth-httplib2
-google-api-python-client
+# Configuration & Logging
+python-dotenv>=1.0.0
+loguru>=0.7.0
+pydantic>=2.5.0
 
-# Audio processing (included with pipecat but may need explicit install)
-torch
-torchaudio
+# Google Workspace API (Gmail & Calendar OAuth)
+google-auth>=2.28.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+google-api-python-client>=2.118.0
 
-# Optional: For better performance
-numpy
+# Audio Processing & VAD
+torch>=2.2.0
+torchaudio>=2.2.0
+numpy>=1.26.0

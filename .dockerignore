@@ -1,0 +1,29 @@
+# Ignore secrets and environment configs
+.env
+*.env
+token.json
+credentials.json
+*.pem
+*.key
+
+# Git and IDEs
+.git/
+.gitignore
+.idea/
+.vscode/
+*.swp
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Scratch & logs
+scratch/
+logs/
+*.log
