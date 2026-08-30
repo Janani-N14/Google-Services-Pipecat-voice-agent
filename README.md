@@ -166,24 +166,33 @@ Then open **`http://localhost:7860`** in your browser.
 
 ---
 
-## 🐳 Production Cloud Deployment (Docker)
-
-### 1. Build and Run Docker Container Locally
-```bash
-docker build -t voice-agent .
-docker run -p 7860:7860 --env-file .env voice-agent
-```
-
-### 2. Deploy to Cloud (Render, Railway, HuggingFace Spaces)
-1. Push this repository to GitHub.
-2. Link the repository to your cloud provider (e.g. [Railway](https://railway.app) or [Render](https://render.com)).
-3. Add `GROQ_API_KEY` and `SARVAM_API_KEY` to your cloud environment variables.
-4. Set the Start Command to:
-   ```bash
-   python server.py --host 0.0.0.0 --port $PORT
-   ```
-
 ---
+
+## ☁️ Automated AWS ECR & EC2 Deployment (GitHub Actions)
+
+A complete CI/CD pipeline is configured in [`.github/workflows/main.yml`](.github/workflows/main.yml) using **AWS ECR** and a **Self-Hosted EC2 Runner**:
+1. **Continuous Integration (`integration`):** Runs syntax and lint validation.
+2. **Continuous Delivery (`build-and-push-ecr-image`):** Builds the Docker image and pushes it to Amazon ECR.
+3. **Continuous Deployment (`Continuous-Deployment`):** Triggers on your self-hosted EC2 runner, pulls the latest image from ECR, and launches the container on port `7860`.
+
+### 🔑 Required GitHub Secrets
+Navigate to **GitHub Repository → Settings → Secrets and variables → Actions** and add:
+
+#### 1. AWS Credentials & ECR Configuration:
+- `AWS_ACCESS_KEY_ID`: Your AWS Access Key ID
+- `AWS_SECRET_ACCESS_KEY`: Your AWS Secret Access Key
+- `AWS_REGION`: AWS Region (e.g., `ap-south-1` or `us-east-1`)
+- `AWS_ECR_LOGIN_URI`: ECR Registry URI (e.g., `123456789012.dkr.ecr.ap-south-1.amazonaws.com`)
+- `ECR_REPOSITORY_NAME`: ECR Repository Name (e.g., `voice-agent`)
+
+#### 2. Application API Secrets (Only 2 needed!):
+- `GROQ_API_KEY`: Your Groq Cloud API Key
+- `SARVAM_API_KEY`: Your Sarvam AI API Key
+
+> [!TIP]
+> Ensure your **EC2 Security Group** has inbound rules allowing:
+> - **Port 22 (SSH)** from GitHub Actions / your IP.
+> - **Port 7860 (Custom TCP)** from `0.0.0.0/0` (Anywhere) to access the Voice Agent Web UI.
 
 ## 📖 Tool Specifications
 
