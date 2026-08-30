@@ -168,26 +168,26 @@ Then open **`http://localhost:7860`** in your browser.
 
 ---
 
-## ☁️ Automated AWS EC2 Deployment (GitHub Actions)
+## ☁️ Automated AWS ECR & EC2 Deployment (GitHub Actions)
 
-A complete CI/CD pipeline is configured in [`.github/workflows/main.yml`](.github/workflows/main.yml). On every push to `main`, GitHub Actions automatically:
-1. Tests Python syntax and validates the Docker build.
-2. Connects to your AWS EC2 instance via SSH.
-3. Automatically updates code, builds the container, and starts the server on port `7860`.
+A complete CI/CD pipeline is configured in [`.github/workflows/main.yml`](.github/workflows/main.yml) using **AWS ECR** and a **Self-Hosted EC2 Runner**:
+1. **Continuous Integration (`integration`):** Runs syntax and lint validation.
+2. **Continuous Delivery (`build-and-push-ecr-image`):** Builds the Docker image and pushes it to Amazon ECR.
+3. **Continuous Deployment (`Continuous-Deployment`):** Triggers on your self-hosted EC2 runner, pulls the latest image from ECR, and launches the container on port `7860`.
 
 ### 🔑 Required GitHub Secrets
 Navigate to **GitHub Repository → Settings → Secrets and variables → Actions** and add:
 
-#### 1. AWS EC2 Connection Secrets:
-- `EC2_HOST`: Public IP / DNS of your EC2 instance (e.g., `54.210.xx.xx`)
-- `EC2_USER`: SSH user (e.g., `ubuntu` or `ec2-user`)
-- `EC2_SSH_KEY`: Content of your `.pem` private key
+#### 1. AWS Credentials & ECR Configuration:
+- `AWS_ACCESS_KEY_ID`: Your AWS Access Key ID
+- `AWS_SECRET_ACCESS_KEY`: Your AWS Secret Access Key
+- `AWS_REGION`: AWS Region (e.g., `ap-south-1` or `us-east-1`)
+- `AWS_ECR_LOGIN_URI`: ECR Registry URI (e.g., `123456789012.dkr.ecr.ap-south-1.amazonaws.com`)
+- `ECR_REPOSITORY_NAME`: ECR Repository Name (e.g., `voice-agent`)
 
 #### 2. Application API Secrets (Only 2 needed!):
 - `GROQ_API_KEY`: Your Groq Cloud API Key
 - `SARVAM_API_KEY`: Your Sarvam AI API Key
-
-*(All model names, voice IDs, ports, and hosts are automatically pre-configured with optimized production defaults).*
 
 > [!TIP]
 > Ensure your **EC2 Security Group** has inbound rules allowing:
