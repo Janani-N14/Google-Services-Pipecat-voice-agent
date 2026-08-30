@@ -166,24 +166,33 @@ Then open **`http://localhost:7860`** in your browser.
 
 ---
 
-## 🐳 Production Cloud Deployment (Docker)
-
-### 1. Build and Run Docker Container Locally
-```bash
-docker build -t voice-agent .
-docker run -p 7860:7860 --env-file .env voice-agent
-```
-
-### 2. Deploy to Cloud (Render, Railway, HuggingFace Spaces)
-1. Push this repository to GitHub.
-2. Link the repository to your cloud provider (e.g. [Railway](https://railway.app) or [Render](https://render.com)).
-3. Add `GROQ_API_KEY` and `SARVAM_API_KEY` to your cloud environment variables.
-4. Set the Start Command to:
-   ```bash
-   python server.py --host 0.0.0.0 --port $PORT
-   ```
-
 ---
+
+## ☁️ Automated AWS EC2 Deployment (GitHub Actions)
+
+A complete CI/CD pipeline is configured in [`.github/workflows/main.yml`](.github/workflows/main.yml). On every push to `main`, GitHub Actions automatically:
+1. Tests Python syntax and validates the Docker build.
+2. Connects to your AWS EC2 instance via SSH.
+3. Automatically updates code, builds the container, and starts the server on port `7860`.
+
+### 🔑 Required GitHub Secrets
+Navigate to **GitHub Repository → Settings → Secrets and variables → Actions** and add:
+
+#### 1. AWS EC2 Connection Secrets:
+- `EC2_HOST`: Public IP / DNS of your EC2 instance (e.g., `54.210.xx.xx`)
+- `EC2_USER`: SSH user (e.g., `ubuntu` or `ec2-user`)
+- `EC2_SSH_KEY`: Content of your `.pem` private key
+
+#### 2. Application API Secrets (Only 2 needed!):
+- `GROQ_API_KEY`: Your Groq Cloud API Key
+- `SARVAM_API_KEY`: Your Sarvam AI API Key
+
+*(All model names, voice IDs, ports, and hosts are automatically pre-configured with optimized production defaults).*
+
+> [!TIP]
+> Ensure your **EC2 Security Group** has inbound rules allowing:
+> - **Port 22 (SSH)** from GitHub Actions / your IP.
+> - **Port 7860 (Custom TCP)** from `0.0.0.0/0` (Anywhere) to access the Voice Agent Web UI.
 
 ## 📖 Tool Specifications
 

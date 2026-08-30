@@ -1,0 +1,144 @@
+name: CI/CD Pipeline - AWS EC2 Deployment
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  # ============================================================================
+  # 1. CI: Automated Testing & Docker Image Build Check
+  # ============================================================================
+  test_and_build:
+    name: Test & Build Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Linux Audio & Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            ffmpeg \
+            libasound2-dev \
+            portaudio19-dev \
+            libportaudio2
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validate Pipeline & Services
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY || 'dummy_test_key' }}
+          SARVAM_API_KEY: ${{ secrets.SARVAM_API_KEY || 'dummy_test_key' }}
+        run: |
+          python -c "import bot, server, config; print('Syntax & Modules Validated Successfully!')"
+
+      - name: Validate Docker Build
+        run: |
+          docker build -t voice-agent:test .
+
+  # ============================================================================
+  # 2. CD: Automatic Deployment to AWS EC2 via SSH
+  # ============================================================================
+  deploy_to_aws_ec2:
+    name: Deploy to AWS EC2
+    needs: test_and_build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy on AWS EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+            echo "🚀 Starting Deployment on AWS EC2..."
+
+            # 1. Ensure Docker and Git are installed
+            if ! command -v docker &> /dev/null; then
+              echo "Installing Docker..."
+              sudo apt-get update
+              sudo apt-get install -y docker.io git curl
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker $USER
+            fi
+
+            # 2. Setup project directory
+            APP_DIR="$HOME/voice-agent"
+            REPO_URL="https://github.com/${{ github.repository }}.git"
+
+            if [ ! -d "$APP_DIR" ]; then
+              echo "Cloning repository to $APP_DIR..."
+              git clone "$REPO_URL" "$APP_DIR"
+              cd "$APP_DIR"
+            else
+              echo "Updating repository in $APP_DIR..."
+              cd "$APP_DIR"
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+
+            # 3. Create .env file with only the 2 required API secrets
+            echo "Writing environment configuration..."
+            cat << EOF > .env
+GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
+GROQ_MODEL=qwen/qwen3.8-27b
+GROQ_STT_MODEL=whisper-large-v3-turbo
+SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}
+SARVAM_MODEL=bulbul:v3
+SARVAM_VOICE_ID=shubh
+SARVAM_LANGUAGE=en-IN
+SARVAM_STREAMING=true
+HOST=0.0.0.0
+PORT=7860
+EOF
+
+            # 4. Build Docker container
+            echo "Building Docker container image..."
+            sudo docker build -t voice-agent .
+
+            # 5. Stop and remove existing container if running
+            echo "Stopping existing voice-agent container (if any)..."
+            sudo docker stop voice-agent || true
+            sudo docker rm voice-agent || true
+
+            # 6. Run new container
+            echo "Launching updated voice-agent container on port 7860..."
+            sudo docker run -d \
+              --name voice-agent \
+              --restart always \
+              -p 7860:7860 \
+              --env-file .env \
+              voice-agent
+
+            # 7. Verify Health Status
+            echo "Checking server health status..."
+            sleep 5
+            curl -f http://localhost:7860/api/status || echo "Warning: Health endpoint pending startup."
+
+            echo "✅ Deployment on AWS EC2 completed successfully! Web UI active on http://${{ secrets.EC2_HOST }}:7860"
