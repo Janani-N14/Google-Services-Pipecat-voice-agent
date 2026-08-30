@@ -250,12 +250,15 @@ if FRONTEND_DIR.exists():
 
 def main():
     import argparse
+    default_host = os.environ.get("HOST", "0.0.0.0")
+    default_port = int(os.environ.get("PORT", 7860))
+
     parser = argparse.ArgumentParser(description="Pipecat Voice Agent Web Server")
-    parser.add_argument("--host", default="0.0.0.0", help="Host address (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=7860, help="Port number (default: 7860)")
+    parser.add_argument("--host", default=default_host, help=f"Host address (default: {default_host})")
+    parser.add_argument("--port", type=int, default=default_port, help=f"Port number (default: {default_port})")
     args = parser.parse_args()
 
-    print(f"\n🚀 Voice Agent UI ready at: http://localhost:{args.port}/\n", flush=True)
+    print(f"\n🚀 Voice Agent UI ready at: http://{args.host}:{args.port}/\n", flush=True)
     uvicorn.run(app, host=args.host, port=args.port)
 
 
